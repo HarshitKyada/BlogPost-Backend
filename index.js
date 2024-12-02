@@ -23,15 +23,13 @@ app.use(
 app.use(express.json());
 
 try {
-  mongoose
-    .connect(process.env.MONGODB_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000, // Adjust timeout as needed
-    })
-    .then(() => {
-      console.log("Connected to MongoDB");
-    });
+  mongoose.connect(process.env.MONGODB_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    ssl: true,
+    sslValidate: true, // Ensure SSL certificate is valid
+    tlsAllowInvalidCertificates: false, // Set to true if needed for self-signed certs
+  });
 } catch (error) {
   console.log(error);
 }
