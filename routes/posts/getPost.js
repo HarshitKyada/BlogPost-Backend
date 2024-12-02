@@ -16,52 +16,17 @@ router.get("/getblog/:id?", async (req, res) => {
         return res.status(404).json({ error: "Blog post not found" });
       }
 
-      // Add binary data to contentBlocks
-      blogPost.contentBlocks = await Promise.all(
-        blogPost.contentBlocks.map(async (block) => {
-          if (block.type === "image") {
-            const filePath = path.resolve(
-              __dirname,
-              "../../uploads",
-              path.basename(block.imageUrl)
-            );
-
-            if (fs.existsSync(filePath)) {
-              try {
-                const imageBuffer = fs.readFileSync(filePath);
-                block.binaryData = imageBuffer.toString("base64");
-              } catch (error) {
-                console.error("Error reading file:", error);
-                block.binaryData = null;
-              }
-            } else {
-              block.binaryData = null;
-            }
-          }
-          return block;
-        })
-      );
+      // Return the base64 binary data as part of the contentBlocks
+      blogPost.contentBlocks = blogPost.contentBlocks.map((block) => {
+        if (block.type === "image" && block.imageUrl) {
+          block.binaryData = block.imageUrl; // base64 data
+        }
+        return block;
+      });
 
       // Add binary data for featuredImage
       if (blogPost.featuredImage) {
-        const featuredImagePath = path.resolve(
-          __dirname,
-          "../../uploads",
-          path.basename(blogPost.featuredImage)
-        );
-
-        if (fs.existsSync(featuredImagePath)) {
-          try {
-            const featuredImageBuffer = fs.readFileSync(featuredImagePath);
-            blogPost.featuredImageBinary =
-              featuredImageBuffer.toString("base64");
-          } catch (error) {
-            console.error("Error reading featured image:", error);
-            blogPost.featuredImageBinary = null;
-          }
-        } else {
-          blogPost.featuredImageBinary = null;
-        }
+        blogPost.featuredImageBinary = blogPost.featuredImage; // base64 data
       }
 
       return res.json({
@@ -81,31 +46,13 @@ router.get("/getblog/:id?", async (req, res) => {
         return res.status(404).json({ error: "No blog posts found" });
       }
 
-      const processedPosts = await Promise.all(
-        blogPosts.map(async (post) => {
-          if (post.featuredImage) {
-            const featuredImagePath = path.resolve(
-              __dirname,
-              "../../uploads",
-              path.basename(post.featuredImage)
-            );
-
-            if (fs.existsSync(featuredImagePath)) {
-              try {
-                const featuredImageBuffer = fs.readFileSync(featuredImagePath);
-                post.featuredImageBinary =
-                  featuredImageBuffer.toString("base64");
-              } catch (error) {
-                console.error("Error reading featured image:", error);
-                post.featuredImageBinary = null;
-              }
-            } else {
-              post.featuredImageBinary = null;
-            }
-          }
-          return post;
-        })
-      );
+      // Add binary data for all featuredImages
+      const processedPosts = blogPosts.map((post) => {
+        if (post.featuredImage) {
+          post.featuredImageBinary = post.featuredImage; // base64 data
+        }
+        return post;
+      });
 
       return res.json({
         data: processedPosts,

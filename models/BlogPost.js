@@ -10,18 +10,17 @@ const contentBlockSchema = new Schema({
   content: {
     type: String,
     required: function () {
-      // Require content only for "heading" and "paragraph" types
       return this.type === "heading" || this.type === "paragraph";
     },
   },
-  imageUrl: String, // For images
-  binaryData: String, // For images
+  imageUrl: String, // Store the base64 string here
+  binaryData: String, // For images (base64 string)
   link: String, // For affiliate link
 });
 
 const blogPostSchema = new Schema({
   title: { type: String, required: true },
-  featuredImage: { type: String, required: true }, // URL to the uploaded image
+  featuredImage: { type: String, required: true }, // Base64 string
   featuredImageBinary: { type: String },
   contentBlocks: [contentBlockSchema],
   createdAt: { type: Date, default: Date.now },

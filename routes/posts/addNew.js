@@ -1,25 +1,14 @@
 const express = require("express");
 const multer = require("multer");
+const fs = require("fs");
 const path = require("path");
 const BlogPost = require("../../models/BlogPost");
-const fs = require("fs");
+const util = require("util");
 
 const router = express.Router();
 
-const uploadsDir = path.join(__dirname, "../../uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-
+// Handle image upload in memory
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 router.post(
@@ -32,18 +21,25 @@ router.post(
     try {
       const { title, contentBlocks } = req.body;
 
-      const featuredImage = req.files["featuredImage"]?.[0]?.path;
+      // Convert featured image to base64
+      const featuredImageBuffer = req.files["featuredImage"]?.[0]?.buffer;
+      const featuredImageBase64 = featuredImageBuffer
+        ? featuredImageBuffer.toString("base64")
+        : null;
 
       let parsedContentBlocks = [];
       if (contentBlocks) {
         try {
           parsedContentBlocks = JSON.parse(contentBlocks);
 
+          // Convert content images to base64
           const contentImages = req.files["contentImages"] || [];
           let imageIndex = 0;
+
           parsedContentBlocks = parsedContentBlocks.map((block) => {
             if (block.type === "image" && contentImages[imageIndex]) {
-              block.imageUrl = contentImages[imageIndex].path;
+              const imageBuffer = contentImages[imageIndex].buffer;
+              block.imageUrl = imageBuffer.toString("base64");
               imageIndex++;
             }
             return block;
@@ -57,7 +53,7 @@ router.post(
 
       const newBlogPost = new BlogPost({
         title,
-        featuredImage,
+        featuredImage: featuredImageBase64,
         contentBlocks: parsedContentBlocks,
       });
 
@@ -72,8 +68,5 @@ router.post(
     }
   }
 );
-
-// Serve static files for images
-router.use("/uploads", express.static(path.join(__dirname, "../../uploads")));
 
 module.exports = router;
