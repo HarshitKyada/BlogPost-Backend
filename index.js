@@ -26,9 +26,8 @@ try {
   mongoose.connect(process.env.MONGODB_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    ssl: true,
-    sslValidate: true, // Ensure SSL certificate is valid
-    tlsAllowInvalidCertificates: false, // Set to true if needed for self-signed certs
+    tls: true, // Enable TLS
+    tlsAllowInvalidCertificates: false
   });
 } catch (error) {
   console.log(error);
